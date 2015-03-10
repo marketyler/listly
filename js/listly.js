@@ -4,11 +4,12 @@ var Listly = function() {
     var self = this;
     self.tasks = [];
 
-    function addTask(name) {
-      name = $(name);
-      self.tasks.push(name.val());
+    function addTask(task_name) {
+
+      var task = new Task({name: task_name});
+      self.tasks.push(task);
       if (save()) {
-        appendToList(name.val());
+        appendToList(task);
         return true;
       }
       else {
@@ -16,18 +17,18 @@ var Listly = function() {
       }
     }
 
-    function appendToList(task_name) {
+    function appendToList(task) {
       // Grab list item template
       var li = $('#list_item_template').clone();
       li.removeAttr('id');
 
-      li.find('label').text(task_name);
+      li.find('label').text(task.name);
       li.removeClass('hidden');
 
       li.find('.btn-danger').click(function() {
         // remove from array
-        self.tasks.splice(self.tasks.indexOf(task_name), 1);
-      
+        self.tasks.splice(self.tasks.indexOf(task.name), 1);
+
         // save to local storage
         save();
 
@@ -68,6 +69,7 @@ var Listly = function() {
 
     function save() {
       if (supportsLocalStorage()) {
+
           return (localStorage.tasks = JSON.stringify(self.tasks));
       }
       else {
@@ -87,21 +89,16 @@ var Listly = function() {
     // instantiate handlers
     $('form#new_task').submit(function(ev) {
       ev.preventDefault();
-      var task_name = $(this.task_name);
+      var task_name = $(this.task_name).val();
 
       if (addTask(task_name)) {
-        task_name.val('');
+        task_name = "" ;
       }
       else {
         showFormError(this);
       }
-      task_name.focus().select();
+      $(this.task_name).focus().select();
     });
-
-    // $('').onclick(function(ev) {
-    //
-    // });
-
   }
 
   return Listly;
