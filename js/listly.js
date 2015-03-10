@@ -26,7 +26,12 @@ var Listly = function() {
 
       li.find('.btn-danger').click(function() {
         // remove from array
+        self.tasks.splice(self.tasks.indexOf(task_name), 1);
+      
+        // save to local storage
+        save();
 
+        // remove from list
         li.remove();
         //removeFromList(item);
       });
