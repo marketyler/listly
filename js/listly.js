@@ -8,8 +8,7 @@ var Listly = function() {
       name = $(name);
       self.tasks.push(name.val());
       if (save()) {
-        var result = $('#tasks').append('<li>' + name.val() +'</li>');
-        result.find('li').addClass('list-group-item');
+        appendToList(name.val());
         return true;
       }
       else {
@@ -17,20 +16,64 @@ var Listly = function() {
       }
     }
 
-    function load() {
-      self.tasks = JSON.parse(localStorage.tasks);
-      $.each(self.tasks, function(index, task) {
-        $('#tasks').append('<li class="list-group-item">' + task +'</li>');
+    function appendToList(task_name) {
+      // Grab list item template
+      var li = $('#list_item_template').clone();
+      li.removeAttr('id');
+
+      li.find('label').text(task_name);
+      li.removeClass('hidden');
+
+      li.find('.btn-danger').click(function() {
+        // remove from array
+
+        li.remove();
+        //removeFromList(item);
       });
+
+      $('#tasks').append(li);
+    }
+
+    function removeFromList(item) {
+      // remove from array
+      var name = li.
+      // remove from local storage
+
+      //remove from ol
+      item.remove();
+    }
+
+    function supportsLocalStorage() {
+      try {
+        return 'localStorage' in window && window.localStorage !== null;
+      }
+      catch (err) {
+        return false;
+      }
+    }
+
+    function load() {
+      if (supportsLocalStorage() && localStorage.tasks) {
+        self.tasks = JSON.parse(localStorage.tasks);
+        $.each(self.tasks, function(index, task) {
+          appendToList(task);
+        });
+      }
     }
 
     function save() {
-      try {
-        return (localStorage.tasks = JSON.stringify(self.tasks));
+      if (supportsLocalStorage()) {
+          return (localStorage.tasks = JSON.stringify(self.tasks));
       }
-      catch(err) {
+      else {
         return false;
       }
+    }
+
+    function showFormError(form) {
+      $(form).find('.alert')
+        .html('Ahhh cuss!')
+        .removeClass('hidden');
     }
 
     // load the form
@@ -44,8 +87,15 @@ var Listly = function() {
       if (addTask(task_name)) {
         task_name.val('');
       }
+      else {
+        showFormError(this);
+      }
       task_name.focus().select();
     });
+
+    // $('').onclick(function(ev) {
+    //
+    // });
 
   }
 
