@@ -56,10 +56,11 @@ var Listly = function() {
     }
 
     function createEditForm(ev) {
-      var task, li, edit_form, name_field;
+      var task, li, edit_form, name_field, label;
 
       task = ev.data;
       li = $(this).closest('li');
+      label = li.find('label');
 
       edit_form =
         $('#edit_form_template').clone().removeAttr('id');
@@ -68,11 +69,16 @@ var Listly = function() {
       name_field.data('task-id', task.id);
       name_field.val(task.name);
 
-      li.find('label').replaceWith(edit_form);
+      li.find('.btn-group').addClass('hidden');
+      label.addClass('hidden');
+      edit_form.insertBefore(label);
       name_field.focus().select();
 
       // Save button
       edit_form.submit(updateTask);
+      edit_form.find('button.cancel').click(function(ev) {
+        removeEditForm(edit_form);
+      });
     }
 
     function updateTask(ev) {
@@ -87,9 +93,22 @@ var Listly = function() {
         }
       });
 
-      save();
+      if (save()) {
+        $(this).siblings('label').text(field.val());
+        removeEditForm(this);
+      }
     }
 
+    function removeEditForm(form) {
+      var label, field;
+      form = $(form);
+      label = form.siblings('label');
+      field = form.find('.edit-task-name');
+
+      label.removeClass('hidden');
+      form.siblings('.btn-group').removeClass('hidden');
+      form.remove();
+    }
     function showFormError(form) {
       // add message inside alert div
       $(form).find('.alert').removeClass('hidden');
