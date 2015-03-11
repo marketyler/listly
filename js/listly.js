@@ -5,9 +5,16 @@ var Listly = function() {
     self.tasks = [];
 
     function addTask(task_name) {
+      // All of this...
+      // var properties = {};
+      // properties.name = task_name;
+      // var task = new Task(properties);
+      // self.tasks.push(task);
 
-      var task = new Task({name: task_name});
+      // Is equivalent to these two line
+      var task = new Task({ name: task_name });
       self.tasks.push(task);
+
       if (save()) {
         appendToList(task);
         return true;
@@ -18,50 +25,72 @@ var Listly = function() {
     }
 
     function appendToList(task) {
-      // Grab list item template
+      // Grab a copy of the list item template.
       var li = $('#list_item_template').clone();
       li.removeAttr('id');
 
+      // Add the task name to the LI's label.
       li.find('label').text(task.name);
+
+      // Unhide the new LI.
       li.removeClass('hidden');
 
-      li.find('.btn-danger').click(function() {
-        // remove from array
-        self.tasks.splice(self.tasks.indexOf(task.name), 1);
-
-        // save to local storage
+      // Activate the delete button.
+      li.find('button.delete').click(function() {
+        self.tasks.splice(self.tasks.indexOf(task), 1);
         save();
-
-        // remove from list
         li.remove();
-        //removeFromList(item);
       });
+
+      $('body').on('click', 'button.edit', function() {
+
+      });
+
+
+      // Activate the edit button.
+      li.find('button.edit').click(task, createEditForm);
 
       $('#tasks').append(li);
     }
 
-    function removeFromList(item) {
-      // remove from array
-      var name = li.
-      // remove from local storage
+    function createEditForm(ev) {
+      var task, li, edit_form, name_field;
 
-      //remove from ol
-      item.remove();
+      task = ev.data;
+      li = $(this).closest('li');
+
+      edit_form =
+        $('#edit_form_template').clone().removeAttr('id');
+      edit_form.removeClass('hidden');
+      name_field = edit_form.find('.edit-task-name');
+      name_field.data('task-id', task.id);
+      name_field.val(task.name);
+
+      li.find('label').replaceWith(edit_form);
+      name_field.focus().select();
+    }
+
+    function showFormError(form) {
+      // add message inside alert div
+      $(form).find('.alert').removeClass('hidden');
     }
 
     function supportsLocalStorage() {
       try {
-        return 'localStorage' in window && window.localStorage !== null;
+         return 'localStorage' in window && window.localStorage !== null;
       }
-      catch (err) {
+      catch(err) {
         return false;
       }
     }
 
     function load() {
       if (supportsLocalStorage() && localStorage.tasks) {
-        self.tasks = JSON.parse(localStorage.tasks);
-        $.each(self.tasks, function(index, task) {
+        var task;
+        var task_objects = JSON.parse(localStorage.tasks);
+        $.each(task_objects, function(index, task_properties) {
+          task = new Task(task_properties);
+          self.tasks.push(task);
           appendToList(task);
         });
       }
@@ -69,35 +98,27 @@ var Listly = function() {
 
     function save() {
       if (supportsLocalStorage()) {
-
-          return (localStorage.tasks = JSON.stringify(self.tasks));
+        return (localStorage.tasks = JSON.stringify(self.tasks));
       }
       else {
         return false;
       }
     }
 
-    function showFormError(form) {
-      $(form).find('.alert')
-        .html('Ahhh cuss!')
-        .removeClass('hidden');
-    }
-
-    // load the form
     load();
 
-    // instantiate handlers
-    $('form#new_task').submit(function(ev) {
+    $('form#new_task').on('submit', function(ev) {
       ev.preventDefault();
-      var task_name = $(this.task_name).val();
+      var field = $(this.task_name);
+      var task_name = field.val();
 
       if (addTask(task_name)) {
-        task_name = "" ;
+        field.val('');
       }
       else {
         showFormError(this);
       }
-      $(this.task_name).focus().select();
+      field.focus().select();
     });
   }
 
