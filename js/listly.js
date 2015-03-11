@@ -73,7 +73,7 @@ var Listly = function() {
       var checkbox, task_id, task;
       checkbox = $(this);
       task_id = checkbox.closest('li.task').data('task-id');
-      task = getTaskById(task_id);
+      task = Task.getTaskById(task_id);
       task.completed = checkbox.prop('checked');
       if (task.completed) {
         checkbox.closest('label').addClass('completed');
@@ -116,7 +116,7 @@ var Listly = function() {
 
       field = $(this.elements.task_name);
       id = field.data('task-id');
-      task = getTaskById(id);
+      task =  Task.getTaskById(id);
 
       task.name = field.val();
 
@@ -177,24 +177,12 @@ var Listly = function() {
       var task, task_id;
       $('#tasks li.task').each(function(index) {
         task_id = $(this).data('task-id');
-        task = getTaskById(task_id);
+        task = Task.getTaskById(task_id);
         if (task) {
           task.position = index + 1;
         }
 
       });
-    }
-
-    function getTaskById(id) {
-      var task;
-      $.each(self.tasks, function(index, current_task) {
-        if (current_task.id == id) {
-          task = current_task;
-          return false;
-        }
-      });
-
-      return task;
     }
 
     function save() {
