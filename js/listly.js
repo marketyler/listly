@@ -30,7 +30,9 @@ var Listly = function() {
       li.removeAttr('id');
 
       // Add the task name to the LI's label.
-      li.find('label').text(task.name);
+      li.addClass('task');
+      li.attr('data-task-id', task.id);
+      li.find('label').append(' ' + task.name);
 
       // Unhide the new LI.
       li.removeClass('hidden');
@@ -82,19 +84,20 @@ var Listly = function() {
     }
 
     function updateTask(ev) {
-
       ev.preventDefault();
-      var field = $(this.elements.task_name);
-      var id = field.data('task-id');
-      $.each(self.tasks, function(index, task) {
-        if (task.id == id) {
-          task.name = field.val();
-          return false;
-        }
-      });
+      var field, id, task;
+
+      field = $(this.elements.task_name);
+      id = field.data('task-id');
+      task = getTaskById(id);
+
+      task.name = field.val();
 
       if (save()) {
-        $(this).siblings('label').text(field.val());
+        var label = $(this).siblings('label');
+        var checkbox = label.find('input[type=checkbox]');
+        label.text(' ' + field.val());
+        label.prepend(checkbox);
         removeEditForm(this);
       }
     }
@@ -124,10 +127,18 @@ var Listly = function() {
     }
 
     function load() {
+      var task, task_objects;
+
       if (supportsLocalStorage() && localStorage.tasks) {
-        var task;
-        var task_objects = JSON.parse(localStorage.tasks);
+        task_objects = JSON.parse(localStorage.tasks);
+        task_objects.sort(function(a, b) {
+          if (isNaN(a.position) || (isNaN(b.position))) {
+            return 0;
+          }
+          return a.position - b.position;
+        });
         $.each(task_objects, function(index, task_properties) {
+          // TODO: Add these in order by position
           task = new Task(task_properties);
           self.tasks.push(task);
           appendToList(task);
@@ -135,8 +146,33 @@ var Listly = function() {
       }
     }
 
+    function updatePositions() {
+      var task, task_id;
+      $('#tasks li.task').each(function(index) {
+        task_id = $(this).data('task-id');
+        task = getTaskById(task_id);
+        if (task) {
+          task.position = index + 1;
+        }
+
+      });
+    }
+
+    function getTaskById(id) {
+      var task;
+      $.each(self.tasks, function(index, current_task) {
+        if (current_task.id == id) {
+          task = current_task;
+          return false;
+        }
+      });
+
+      return task;
+    }
+
     function save() {
       if (supportsLocalStorage()) {
+        updatePositions();
         return (localStorage.tasks = JSON.stringify(self.tasks));
       }
       else {
@@ -148,8 +184,10 @@ var Listly = function() {
 
     $('form#new_task').on('submit', function(ev) {
       ev.preventDefault();
-      var field = $(this.task_name);
-      var task_name = field.val();
+      var field, task_name;
+
+      field = $(this.task_name);
+      task_name = field.val();
 
       if (addTask(task_name)) {
         field.val('');
@@ -158,6 +196,10 @@ var Listly = function() {
         showFormError(this);
       }
       field.focus().select();
+    });
+
+    $('#tasks').sortable({
+      update: save
     });
   }
 
